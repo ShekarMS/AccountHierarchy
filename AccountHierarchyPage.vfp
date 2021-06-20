@@ -1,0 +1,3 @@
+<apex:page standardController="account" tabStyle="Account" > 
+        <c:HierarchyTree currentRecId="{!Account.id}" sObjectTypeName="Account" sObjectFieldsAPINames="Type,Industry" parentIdFieldAPI="parentId" numOfLevels = "5"/>
+</apex:page>

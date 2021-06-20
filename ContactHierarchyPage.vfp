@@ -1,0 +1,3 @@
+<apex:page standardController="Contact" tabStyle="Contact">    
+  <c:HierarchyTree currentRecId="{!Contact.id}" sObjectTypeName="Contact" sObjectFieldsAPINames="Title,Department" parentIdFieldAPI="Parent_Contact__c" numOfLevels = "3"/>
+</apex:page>
