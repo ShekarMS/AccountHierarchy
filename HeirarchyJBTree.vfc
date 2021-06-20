@@ -1,0 +1,88 @@
+<apex:component Controller="HeirarchyJBTreeController" allowDML="true">
+    <apex:attribute name="currentRecId" description="This is the Record Id for displaying Hierarchy" type="String" required="true" assignTo="{!currentId}"/>
+    <apex:attribute name="sObjectTypeName" description="This is the sObjects Type for displaying Hierarchy" type="String" required="true" assignTo="{!sObjectType}"/>
+    <apex:attribute name="sObjectFieldsAPINames" description="This is the field API Names to be displayed in Hierarchy Page" type="String" required="true" assignTo="{!sObjectFields}"/>
+    <apex:attribute name="parentIdFieldAPI" description="This is the field API Name for parentRelation in Hierarchy Page" type="String" required="true" assignTo="{!parentIdField}"/>
+    <apex:attribute name="numOfLevels" description="No. of Hierarchy Levels to be dislayed in Hierarchy Page" type="Integer" required="true" assignTo="{!noOfLevels}"/>    
+    
+    <apex:includescript value="{!URLFOR($Resource.JBTree,'jquery.min.js')}"/>
+    <apex:includescript value="{!URLFOR($Resource.JBTree,'tree.jquery.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.JBTree,'jqtree.css')}"/>
+    <style>
+        div.container {
+            width: 60%;
+        	margin: 30px;
+        	font-size: 150%;
+        }
+    </style>
+    <script type="text/javascript">          
+    $(document).on('ready',function(){
+        var dataFromContr= JSON.parse('{!jsonTree}');
+        console.log('dataFromContr>>>> '+dataFromContr);        
+        $('#tree1').tree({
+            data: dataFromContr,
+            dragAndDrop: true,
+            autoOpen: true,
+            slide: true
+        });          
+        var InitialJSON = $('#tree1').tree('toJson');
+        console.log('InitialJSON>>> '+InitialJSON);        
+        $('#tree1').bind(
+            'tree.move',
+            function(event) {
+                event.preventDefault();
+                var changedJSON = $('#tree1').tree('toJson');                
+                console.log('changedJSON>>> '+changedJSON);
+                event.move_info.do_move();
+                var mNodesfId = event.move_info.moved_node.sfId;
+                var tNode = event.move_info.target_node;
+                var tNodesfId= event.move_info.target_node.sfId;
+                changeHierarchy(mNodesfId,tNodesfId);              
+                console.log('moved_node', event.move_info.moved_node);
+                console.log('target_node', event.move_info.target_node);
+                console.log('position', event.move_info.position);
+                console.log('previous_parent', event.move_info.previous_parent);
+            });
+
+      });       
+        function reLoadContent(jsonText){
+            console.log('I am in After AJAX!!!!!'+jsonText);
+            $('#tree1').tree({
+                data: jsonText,
+                dragAndDrop: true,
+                autoOpen: true
+            });             
+            $("#tree1").fadeIn();
+        }   
+    </script>
+    <head>
+        <apex:slds />
+    </head>
+    <apex:form id="frm" >
+        <apex:actionStatus id="loader">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: black;">
+                    &nbsp;
+                </div>
+                <div class="slds-spinner_container">
+                    <div role="status" class="slds-spinner slds-spinner--medium slds-spinner--brand">
+                        <span class="slds-assistive-text">Loading</span>
+                        <div class="slds-spinner__dot-a"></div>
+                        <div class="slds-spinner__dot-b"></div>
+                    </div>
+                </div>                </apex:facet>
+        </apex:actionStatus>
+        <apex:repeat value="{!ObjectStructure}" var="pos" > 
+        </apex:repeat>
+        <apex:pageBlock id="hierarchyView">
+            <div id="responseErrors"></div>
+            <div class="container">
+                <div id="tree1"></div>
+            </div>
+        </apex:pageBlock>     
+        <apex:actionFunction action="{!updateHierarchy}" name="changeHierarchy" status="loader" reRender="hierarchyView">
+            <apex:param name="movedNode" assignTo="{!movedNode}" value="" /> 
+            <apex:param name="targetNode" assignTo="{!targetNode}" value="" />
+        </apex:actionFunction>
+    </apex:form>
+</apex:component>
